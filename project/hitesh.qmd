@@ -1,0 +1,166 @@
+---
+title: "Malnutrition and Health Indicators Across Time and Population"
+Name: Hitesh Karnatak
+Student Number: 22263508
+Lecturer: Damien Dupre
+Assignment2: Quarto Report
+Date: 27-04-2023
+Subject: Data Analytics & Visualisation (MT5000)
+format: html
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+**Indicators of Nutritional Status in Five Countries in 2020**
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(maps)
+
+# Load data
+gapminder <- read.csv("world_data.csv", stringsAsFactors = FALSE)
+
+# Filter data for 2007
+library(dplyr)
+library(readr)
+
+gapminder <- gapminder %>%
+  mutate(Year = as.character(Year),
+         year = parse_number(Year))
+
+world_data_2020<-gapminder
+#world_data_2020 <- world_data_2020 %>%
+  #left_join(world_data, by = "Country")
+
+# Create new data frame with only countries with numeric population values
+world_data_2020_clean <- world_data_2020 %>%
+  filter(!is.na(population) & is.numeric(population))
+
+world_data_2020_clean$populationmill<-world_data_2020_clean$population/1000000
+# View the new data frame
+#View(world_data_2020_clean)
+
+# Load map data
+map_world <- map_data("world")
+
+# Join population data with map data
+map_pop_2020 <- merge(x = map_world, y = world_data_2020_clean, by.x = c("region") ,by.y =  "Country",all.x = T)
+
+# Create choropleth map using ggplot2
+ggplot(data = map_pop_2020) +
+  aes(x = long, y = lat, group = group, fill = populationmill) +
+  geom_polygon() +
+  scale_fill_gradient(low = "orange", high = "red", na.value = "grey") +
+  labs(
+    title = "Child Malnutrition in 2020: A Global Overview of Stunting and Wasting of top 5 Country",
+    subtitle = "",
+    caption = "",
+    x = "Longitude",
+    y = "Latitude",
+    fill = "Country Population in Million"
+  ) +
+  theme_bw()
+```
+
+The populations and height-for-age and weight-for-height metrics for five nations in 2020. Children in Bangladesh, India, and Pakistan have poor height-for-age and weight-for-height ratios, indicating a large burden of malnutrition. Malnutrition burdens are lower in Brazil and China. 
+
+**Life Expectancy and Population in Five Countries in 2020**
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+data <- read.csv('data_2020.csv')
+data$Avg..Population..total<-data$Avg..Population..total/1000000
+#data$Avg..Population..total<-as.numeric(data$Avg..Population..total)
+x <- data$Avg..Population..total
+y <- data$Avg..Life.expectancy.at.birth..total..years.
+
+model <- lm(y ~ x)
+
+p <- ggplot(data , aes(x = x, y = y)) +
+  geom_point(color = 'blue') +
+  geom_smooth(method = 'lm', color = 'red', formula = y ~ x, se = FALSE) +
+  ggtitle("Life Expectancy and Population in Five Countries in 2020") +
+  xlab("Population in Million") +
+  ylab("Life expectancy at birth, total (years)") +
+  theme_bw() + 
+  geom_text(aes(label = Country..Unicef.Metadata.Csv.), color = 'black', hjust = -0.2, vjust = 0.2, size = 3)
+
+line_eqn <- paste0("y = ", round(coef(model)[2], 2), "x + ", round(coef(model)[1], 2))
+p <- p + annotate("text", x = max(x), y = min(y), label = line_eqn, hjust = 1, vjust = -0.2, size = 3.5)
+
+print(p)
+
+```
+
+
+The population and life expectancy of five nations in 2020: Hong Kong, Japan, North Korea, Macao, and Singapore. The average life expectancy of Japan, Hong Kong, and Macao was 85 years, whereas Singapore had a slightly lower life expectancy of 84 years. With a life expectancy of 73 years, North Korea was the lowest. Japan had the most people, while Singapore and Macao had the fewest. 
+
+**Male and Female Prevalence of Low Height-for-Age and Weight-for-Height**
+
+```{r}
+library(tidyverse)
+
+data_2_2020 <- read.csv("unicef_indicator_2.csv")
+data_2_2020 <- data_2_2020[data_2_2020$time_period == "2020", ]
+
+#head(data_2_2020)
+
+data_2_2020 <- data_2_2020[order(-data_2_2020$obs_value), ]
+
+#head(data_2_2020)
+
+top_5 <- head(data_2_2020, 5)
+
+values <- top_5 %>%
+  group_by(sex) %>%
+  summarize(avg_value = mean(obs_value))
+
+ggplot(values, aes(x = reorder(sex, avg_value), y = avg_value, fill = sex)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+  scale_fill_manual(values = c("red", "green", "blue")) +
+  labs(x = "Sex", y = "Avg. Observed Value", title = "Observed value based on sex") +
+  theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=1)) +
+  coord_flip()
+
+```
+
+The frequency of low height-for-age and low weight-for-height in girls and boys with a -2SD cutoff. Males have a larger prevalence of low values (2.356%) than females (1.328%), for a total prevalence of 1.828% in both sexes. Malnutrition is indicated by low height-for-age and weight-for-height, which can result in unfavorable health consequences and impaired cognitive development. 
+
+**Malnutrition Rates in Children from 1986 to 2021**
+
+```{r}
+df <- as.data.frame(read.csv("file.csv", header = TRUE, row.names = 1))
+
+df <- read.csv("file.csv", header = TRUE, row.names = 1)
+df <- t(df)
+df_f <- df[-c(1:3), ]
+
+df_f <- as.data.frame(df[-c(1:3), ])
+
+df_f <- subset(df_f, complete.cases(df_f))
+
+colnames(df_f) <- c("X__1", "X__2", "X__3")
+df_f$X__1<-as.integer(df_f$X__1)
+
+df_f$X__2<-round(as.numeric(df_f$X__2),1)
+df_f$X__3<-round(as.numeric(df_f$X__3),1)
+ggplot(data = df_f, aes(x = X__1, y = X__2, group = 1)) +
+  geom_line(aes(color = "Female"), linewidth = 0.5) +
+  geom_line(aes(y = X__3, color = "Male"), linewidth = 0.5) +
+  xlab("Time Period") +
+  ylab("Std. Dev. of Obs Value") +
+  ggtitle("Prevalence of Malnutrition Among Males and Females") +
+  theme(axis.line = element_line(color = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank()) +
+  scale_color_manual(values = c("Female" = "red", "Male" = "blue")) 
+```
+
+From 1986 to 2021, the table displays the percentage of girls and men with a height-for-age less than -2 standard deviations and a weight-for-height less than -2 SD. This disorder affected 61.1% of females and 58.6% of men in 1988, but only 1.365% of females and 1.699% of males in 2020.
+
