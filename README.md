@@ -3,7 +3,7 @@
 
 Uploaded the following files :
 
-1) **hitesh.html** -> output file -> Contains main output file, and visualizations.
+1) **index.html** -> output file -> Contains main output file, and visualizations.
 2) **hitesh.qmd** -> outputfile -> contains r-markdown.
 3) **unicef_indicator_2** -> input file -> excel data file
 4) **world_data** -> input file -> excel data file
